@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000; // ✅ Use Railway-assigned port
+const port = process.env.PORT || 3000;
 
 const openai = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -13,7 +13,12 @@ const openai = new OpenAI({
 });
 
 app.use(express.json());
-app.use(express.static('public')); // optional
+app.use(express.static('public')); // serves index.html etc if present
+
+// ✅ Root route so Railway returns something at /
+app.get('/', (req, res) => {
+  res.send('✅ Your Railway app is running!');
+});
 
 let history = [
   {
@@ -65,5 +70,5 @@ Always wait for the player's next input to continue the story.`,
 });
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`🚀 Server running on port ${port}`);
 });
