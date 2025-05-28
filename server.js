@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const OpenAI = require('openai').default;
 const dotenv = require('dotenv');
@@ -6,18 +5,16 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000; // ✅ Use Railway-assigned port
 
-// Initialize OpenAI client for OpenRouter API
 const openai = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
   baseURL: 'https://openrouter.ai/api/v1',
 });
 
 app.use(express.json());
-app.use(express.static('public')); // optional if you have front-end files
+app.use(express.static('public')); // optional
 
-// Conversation history, starting with system prompt tailored for freeform storytelling
 let history = [
   {
     role: 'system',
@@ -28,7 +25,6 @@ Wait for the player's input to continue the story.`,
   },
 ];
 
-// Helper to strip any code blocks that might appear
 function cleanResponse(text) {
   return text.replace(/```[\s\S]*?```/g, '').trim();
 }
@@ -36,12 +32,10 @@ function cleanResponse(text) {
 app.post('/api/chat', async (req, res) => {
   const userInput = req.body.message;
 
-  // Compose a fresh history each time, adding a reminder message
   const freshHistory = [
     {
       role: 'system',
-      content: `
-You are a text-based fantasy adventure game engine.
+      content: `You are a text-based fantasy adventure game engine.
 Respond only with immersive story narration and vivid.
 Do NOT progress the story without the user's input.
 Do NOT reply with answers that are too long.
@@ -49,17 +43,10 @@ Do NOT give the user multiple choice options or suggest numbered options.
 Do NOT give any form of suggestions.
 Do NOT output code or instructions.
 Simply continue the story based on the user's input.
-Always wait for the player's next input to continue the story.
-      `.trim(),
+Always wait for the player's next input to continue the story.`,
     },
-    {
-      role: 'user',
-      content: 'Remember: do not give me any choices or multiple options. Only narrate the story.',
-    },
-    {
-      role: 'user',
-      content: userInput,
-    },
+    { role: 'user', content: 'Remember: do not give me any choices or multiple options. Only narrate the story.' },
+    { role: 'user', content: userInput },
   ];
 
   try {
@@ -70,7 +57,6 @@ Always wait for the player's next input to continue the story.
 
     const rawResponse = completion.choices[0].message.content;
     const response = cleanResponse(rawResponse);
-
     res.json({ reply: response });
   } catch (err) {
     console.error('OpenAI error:', err);
@@ -79,5 +65,5 @@ Always wait for the player's next input to continue the story.
 });
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
